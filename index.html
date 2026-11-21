@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F2A2E">
+<title>عيادتي - نموذج تجريبي</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0F2A2E;--teal:#0B7A75;--gold:#D9A441;--mint:#EAF4F1;--line:#D3E1DD;--mut:#587073;--red:#B3261E}
+*{box-sizing:border-box}
+body{margin:0;font-family:Cairo,system-ui,sans-serif;background:var(--mint);color:var(--ink);padding-bottom:90px;font-size:17px}
+header{background:var(--ink);color:#fff;padding:22px 18px 20px;padding-top:calc(22px + env(safe-area-inset-top))}
+h1{margin:0 0 4px;font-size:24px;font-weight:800}
+.warn{font-size:14px;color:#BFD3D0;margin:0 0 16px}
+.stats{display:flex;gap:28px}
+.stats b{display:block;font-size:34px;line-height:1.1;color:var(--gold);font-weight:800}
+.stats span{font-size:14px;color:#BFD3D0}
+main{padding:16px 18px}
+.item{padding:14px 0;border-bottom:1px solid var(--line)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:16px}
+input,select{width:100%;font:inherit;padding:12px;border:1px solid #b9cdc8;border-radius:10px;margin-bottom:10px;background:#fff;color:var(--ink)}
+.btn{font:inherit;font-size:15px;font-weight:700;background:var(--teal);color:#fff;border:1px solid var(--teal);border-radius:10px;padding:9px 14px;text-decoration:none;display:inline-block;cursor:pointer}
+.btn.g{background:#fff;color:var(--teal)}
+.btn.r{background:#fff;color:var(--red);border-color:var(--red)}
+.add{width:100%;margin-bottom:14px;padding:12px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mut{color:var(--mut);font-size:15px}
+.tag{font-size:13px;font-weight:700;padding:2px 10px;border-radius:99px;background:#D7EEE9;color:var(--teal);margin-inline-start:8px}
+.tag.no{background:#F8E1DE;color:var(--red)}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;font:inherit;font-weight:700;padding:15px 4px;border:0;border-top:3px solid transparent;background:none;color:var(--mut)}
+nav button.on{color:var(--teal);border-top-color:var(--teal)}
+</style>
+</head>
+<body>
+<header>
+  <h1>عيادتي</h1>
+  <p class="warn">نموذج تجريبي: البيانات تُحفظ في هذا الهاتف فقط. لا تُدخل معلومات مرضى حقيقيين.</p>
+  <div class="stats">
+    <div><b id="n">0</b><span>مواعيد اليوم</span></div>
+    <div><b id="d">0</b><span>مبالغ غير مدفوعة</span></div>
+  </div>
+</header>
+<main></main>
+<nav>
+  <button data-t="a" onclick="go('a')">المواعيد</button>
+  <button data-t="p" onclick="go('p')">المرضى</button>
+  <button data-t="i" onclick="go('i')">الفواتير</button>
+</nav>
+<script>
+let S={p:[],a:[],i:[]},tab='a',show=false;
+try{S=JSON.parse(localStorage.getItem('clinic'))||S}catch(x){}
+const $=s=>document.querySelector(s);
+const save=()=>{try{localStorage.setItem('clinic',JSON.stringify(S))}catch(x){}};
+const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const e=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const find=i=>S.p.find(x=>x.id==i)||{name:'غير معروف',phone:''};
+const ph=n=>{n=String(n).replace(/\D/g,'');return n.startsWith('0')?'213'+n.slice(1):n};
+const msg=a=>`السلام عليكم ${find(a.pid).name}، نذكّركم بموعدكم يوم ${a.date} على الساعة ${a.time}. شكراً.`;
+const opts=()=>S.p.map(p=>`<option value="${p.id}">${e(p.name)}</option>`).join('');
+const add=l=>`<button class="btn add" onclick="show=!show;render()">${show?'إغلاق':'+ '+l}</button>`;
+const none=t=>`<p class="mut">${t}</p>`;
+const need=()=>`<p class="mut">أضف مريضاً أولاً من تبويب المرضى.</p>`;
+
+function vA(){
+  const f=show?(S.p.length?`<div class="panel"><select id="f1">${opts()}</select><input id="f2" type="date" value="${today()}"><input id="f3" type="time" value="09:00"><input id="f4" placeholder="ملاحظة (مثلاً: حشو أو استشارة)"><button class="btn" onclick="addA()">حفظ الموعد</button></div>`:need()):'';
+  const L=[...S.a].sort((x,y)=>(x.date+x.time).localeCompare(y.date+y.time)).map(a=>{
+    const p=find(a.pid);
+    return `<div class="item"><b>${e(p.name)}</b><span class="tag ${a.done?'':'no'}">${a.done?'تم':'قادم'}</span>
+    <div class="mut">${e(a.date)} الساعة ${e(a.time)} ${e(a.note)}</div>
+    <div class="acts">${p.phone?`<a class="btn g" target="_blank" href="https://wa.me/${ph(p.phone)}?text=${encodeURIComponent(msg(a))}">تذكير واتساب</a><a class="btn g" href="sms:${e(p.phone)}?body=${encodeURIComponent(msg(a))}">رسالة SMS</a>`:''}
+    <button class="btn g" onclick="tg('a','${a.id}','done')">${a.done?'إعادة فتح':'تم الموعد'}</button>
+    <button class="btn r" onclick="rm('a','${a.id}')">حذف</button></div></div>`}).join('');
+  return add('موعد جديد')+f+(L||none('لا توجد مواعيد. أضف أول موعد.'));
+}
+function vP(){
+  const f=show?`<div class="panel"><input id="f1" placeholder="الاسم الكامل"><input id="f2" type="tel" placeholder="رقم الهاتف (مثلاً 0555123456)"><button class="btn" onclick="addP()">حفظ المريض</button></div>`:'';
+  const L=S.p.map(p=>`<div class="item"><b>${e(p.name)}</b><div class="mut">${e(p.phone)||'بدون رقم'}</div><div class="acts"><button class="btn r" onclick="rm('p','${p.id}')">حذف</button></div></div>`).join('');
+  return add('مريض جديد')+f+(L||none('لا يوجد مرضى. أضف أول مريض.'));
+}
+function vI(){
+  const f=show?(S.p.length?`<div class="panel"><select id="f1">${opts()}</select><input id="f2" type="number" inputmode="numeric" placeholder="المبلغ بالدينار"><button class="btn" onclick="addI()">حفظ الفاتورة</button></div>`:need()):'';
+  const L=[...S.i].reverse().map(v=>`<div class="item"><b>${e(find(v.pid).name)}</b><span class="tag ${v.paid?'':'no'}">${v.paid?'مدفوعة':'غير مدفوعة'}</span>
+    <div class="mut">${v.amount.toLocaleString('en')} دج - ${e(v.date)}</div>
+    <div class="acts"><button class="btn g" onclick="tg('i','${v.id}','paid')">${v.paid?'إلغاء الدفع':'تم الدفع'}</button><button class="btn r" onclick="rm('i','${v.id}')">حذف</button></div></div>`).join('');
+  return add('فاتورة جديدة')+f+(L||none('لا توجد فواتير. أضف أول فاتورة.'));
+}
+function render(){
+  const t=today();
+  $('#n').textContent=S.a.filter(a=>a.date==t&&!a.done).length;
+  $('#d').textContent=S.i.filter(v=>!v.paid).reduce((s,v)=>s+v.amount,0).toLocaleString('en')+' دج';
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==tab));
+  $('main').innerHTML=({a:vA,p:vP,i:vI})[tab]();
+}
+const go=t=>{tab=t;show=false;render()};
+const done=()=>{show=false;save();render()};
+function addA(){const pid=$('#f1').value;if(!pid)return;S.a.push({id:id(),pid,date:$('#f2').value||today(),time:$('#f3').value||'09:00',note:$('#f4').value.trim()});done()}
+function addP(){const name=$('#f1').value.trim();if(!name)return alert('اكتب اسم المريض');S.p.push({id:id(),name,phone:$('#f2').value.trim()});done()}
+function addI(){const pid=$('#f1').value,amount=+$('#f2').value;if(!pid||!(amount>0))return alert('اكتب المبلغ');S.i.push({id:id(),pid,amount,paid:false,date:today()});done()}
+function tg(k,i,f){const o=S[k].find(x=>x.id==i);if(o){o[f]=!o[f];save();render()}}
+function rm(k,i){if(confirm('هل تريد الحذف؟')){S[k]=S[k].filter(x=>x.id!=i);save();render()}}
+render();
+</script>
+</body>
+</html>
