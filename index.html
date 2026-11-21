@@ -4,15 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0F2A2E">
-<title>عيادتي - نموذج تجريبي</title>
+<title>مكتبي - تسيير المهن الحرة</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%230B7A75'/%3E%3Cpath d='M12 21l6 6 11-12' fill='none' stroke='%23D9A441' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#0F2A2E;--teal:#0B7A75;--gold:#D9A441;--mint:#EAF4F1;--line:#D3E1DD;--mut:#587073;--red:#B3261E}
 *{box-sizing:border-box}
 body{margin:0;font-family:Cairo,system-ui,sans-serif;background:var(--mint);color:var(--ink);padding-bottom:90px;font-size:17px}
-header{background:var(--ink);color:#fff;padding:22px 18px 20px;padding-top:calc(22px + env(safe-area-inset-top))}
-h1{margin:0 0 4px;font-size:24px;font-weight:800}
-.warn{font-size:14px;color:#BFD3D0;margin:0 0 16px}
+header{background:var(--ink);color:#fff;padding:18px 18px 20px;padding-top:calc(18px + env(safe-area-inset-top))}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+h1{margin:0;font-size:24px;font-weight:800}
+.seg{display:flex;gap:6px;margin-inline-start:auto}
+.seg button{font:inherit;font-size:14px;padding:6px 14px;border-radius:99px;border:1px solid #4d7a78;background:none;color:#fff}
+.seg button.on{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.warn{font-size:13px;color:#BFD3D0;margin:0 0 14px}
 .stats{display:flex;gap:28px}
 .stats b{display:block;font-size:34px;line-height:1.1;color:var(--gold);font-weight:800}
 .stats span{font-size:14px;color:#BFD3D0}
@@ -28,79 +33,116 @@ input,select{width:100%;font:inherit;padding:12px;border:1px solid #b9cdc8;borde
 .mut{color:var(--mut);font-size:15px}
 .tag{font-size:13px;font-weight:700;padding:2px 10px;border-radius:99px;background:#D7EEE9;color:var(--teal);margin-inline-start:8px}
 .tag.no{background:#F8E1DE;color:var(--red)}
+.kv{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+.bar{height:10px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--teal)}
 nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
-nav button{flex:1;font:inherit;font-weight:700;padding:15px 4px;border:0;border-top:3px solid transparent;background:none;color:var(--mut)}
+nav button{flex:1;font:inherit;font-size:14px;font-weight:700;padding:15px 2px;border:0;border-top:3px solid transparent;background:none;color:var(--mut)}
 nav button.on{color:var(--teal);border-top-color:var(--teal)}
 </style>
 </head>
 <body>
 <header>
-  <h1>عيادتي</h1>
-  <p class="warn">نموذج تجريبي: البيانات تُحفظ في هذا الهاتف فقط. لا تُدخل معلومات مرضى حقيقيين.</p>
+  <div class="top">
+    <svg width="40" height="40" viewBox="0 0 40 40" aria-label="شعار مكتبي"><rect width="40" height="40" rx="10" fill="#0B7A75"/><rect x="9" y="11" width="22" height="20" rx="4" fill="none" stroke="#fff" stroke-width="2.5"/><path d="M9 17h22" stroke="#fff" stroke-width="2.5"/><path d="M15 25l4 4 7-8" fill="none" stroke="#D9A441" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h1>مكتبي</h1>
+    <div class="seg"><button data-m="d" onclick="setM('d')">طبيب</button><button data-m="l" onclick="setM('l')">محامٍ</button></div>
+  </div>
+  <p class="warn">نموذج تجريبي: البيانات تُحفظ في هذا الهاتف فقط. لا تُدخل معلومات حقيقية.</p>
   <div class="stats">
-    <div><b id="n">0</b><span>مواعيد اليوم</span></div>
+    <div><b id="n">0</b><span id="nl">مواعيد اليوم</span></div>
     <div><b id="d">0</b><span>مبالغ غير مدفوعة</span></div>
   </div>
 </header>
 <main></main>
-<nav>
-  <button data-t="a" onclick="go('a')">المواعيد</button>
-  <button data-t="p" onclick="go('p')">المرضى</button>
-  <button data-t="i" onclick="go('i')">الفواتير</button>
-</nav>
+<nav></nav>
 <script>
-let S={p:[],a:[],i:[]},tab='a',show=false;
-try{S=JSON.parse(localStorage.getItem('clinic'))||S}catch(x){}
+let ST={mode:'d',d:{p:[],a:[],i:[],c:[]},l:{p:[],a:[],i:[],c:[]}},tab='a',show=false;
+try{const x=JSON.parse(localStorage.getItem('maktabi'));if(x&&x.d&&x.l)ST=x}catch(x){}
+let S=ST[ST.mode];
 const $=s=>document.querySelector(s);
-const save=()=>{try{localStorage.setItem('clinic',JSON.stringify(S))}catch(x){}};
+const save=()=>{try{localStorage.setItem('maktabi',JSON.stringify(ST))}catch(x){}};
 const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const dd=n=>new Date(Date.now()+n*864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const today=()=>dd(0);
 const e=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const find=i=>S.p.find(x=>x.id==i)||{name:'غير معروف',phone:''};
 const ph=n=>{n=String(n).replace(/\D/g,'');return n.startsWith('0')?'213'+n.slice(1):n};
-const msg=a=>`السلام عليكم ${find(a.pid).name}، نذكّركم بموعدكم يوم ${a.date} على الساعة ${a.time}. شكراً.`;
+const f=n=>n.toLocaleString('en')+' دج';
+const T=()=>ST.mode=='l'?{a:'الجلسات',c:'القضايا',p:'الموكلون',i:'الأتعاب',s:'الإحصائيات',one:'موكل',na:'جلسة جديدة',np:'موكل جديد',ni:'أتعاب جديدة',ph:'ملاحظة (مثلاً: مرافعة أو تأجيل)',tl:'جلسات اليوم'}:{a:'المواعيد',p:'المرضى',i:'الفواتير',s:'الإحصائيات',one:'مريض',na:'موعد جديد',np:'مريض جديد',ni:'فاتورة جديدة',ph:'ملاحظة (مثلاً: حشو أو استشارة)',tl:'مواعيد اليوم'};
+const msg=a=>ST.mode=='l'?`السلام عليكم ${find(a.pid).name}، نذكّركم بجلسة قضيتكم (${a.note}) يوم ${a.date} على الساعة ${a.time}. شكراً.`:`السلام عليكم ${find(a.pid).name}، نذكّركم بموعدكم يوم ${a.date} على الساعة ${a.time}. شكراً.`;
 const opts=()=>S.p.map(p=>`<option value="${p.id}">${e(p.name)}</option>`).join('');
 const add=l=>`<button class="btn add" onclick="show=!show;render()">${show?'إغلاق':'+ '+l}</button>`;
-const none=t=>`<p class="mut">${t}</p>`;
-const need=()=>`<p class="mut">أضف مريضاً أولاً من تبويب المرضى.</p>`;
+const none=t=>`<p class="mut">${t}</p><button class="btn g" onclick="demo()">تحميل بيانات تجريبية</button>`;
+const need=()=>`<p class="mut">أضف ${T().one} أولاً من تبويب ${T().p}.</p>`;
 
 function vA(){
-  const f=show?(S.p.length?`<div class="panel"><select id="f1">${opts()}</select><input id="f2" type="date" value="${today()}"><input id="f3" type="time" value="09:00"><input id="f4" placeholder="ملاحظة (مثلاً: حشو أو استشارة)"><button class="btn" onclick="addA()">حفظ الموعد</button></div>`:need()):'';
+  const l=ST.mode=='l',tx=T();
+  const sel=l?S.c.map(c=>`<option value="${c.id}">${e(c.title)} - ${e(find(c.pid).name)}</option>`).join(''):opts();
+  const ok=l?S.c.length:S.p.length;
+  const fm=show?(ok?`<div class="panel"><select id="f1">${sel}</select><input id="f2" type="date" value="${today()}"><input id="f3" type="time" value="09:00"><input id="f4" placeholder="${tx.ph}"><button class="btn" onclick="addA()">حفظ</button></div>`:(l?'<p class="mut">أضف قضية أولاً من تبويب القضايا.</p>':need())):'';
   const L=[...S.a].sort((x,y)=>(x.date+x.time).localeCompare(y.date+y.time)).map(a=>{
     const p=find(a.pid);
     return `<div class="item"><b>${e(p.name)}</b><span class="tag ${a.done?'':'no'}">${a.done?'تم':'قادم'}</span>
-    <div class="mut">${e(a.date)} الساعة ${e(a.time)} ${e(a.note)}</div>
+    <div class="mut">${e(a.date)} الساعة ${e(a.time)} - ${e(a.note)}</div>
     <div class="acts">${p.phone?`<a class="btn g" target="_blank" href="https://wa.me/${ph(p.phone)}?text=${encodeURIComponent(msg(a))}">تذكير واتساب</a><a class="btn g" href="sms:${e(p.phone)}?body=${encodeURIComponent(msg(a))}">رسالة SMS</a>`:''}
-    <button class="btn g" onclick="tg('a','${a.id}','done')">${a.done?'إعادة فتح':'تم الموعد'}</button>
+    <button class="btn g" onclick="tg('a','${a.id}','done')">${a.done?'إعادة فتح':'تم'}</button>
     <button class="btn r" onclick="rm('a','${a.id}')">حذف</button></div></div>`}).join('');
-  return add('موعد جديد')+f+(L||none('لا توجد مواعيد. أضف أول موعد.'));
+  return add(tx.na)+fm+(L||none('لا شيء هنا بعد. أضف أول عنصر.'));
+}
+function vC(){
+  const fm=show?(S.p.length?`<div class="panel"><select id="f1">${opts()}</select><input id="f2" placeholder="عنوان القضية (مثلاً: نزاع تجاري)"><input id="f3" placeholder="المحكمة"><button class="btn" onclick="addC()">حفظ القضية</button></div>`:need()):'';
+  const L=S.c.map(c=>`<div class="item"><b>${e(c.title)}</b><div class="mut">${e(find(c.pid).name)} - ${e(c.court)}</div><div class="acts"><button class="btn r" onclick="rm('c','${c.id}')">حذف</button></div></div>`).join('');
+  return add('قضية جديدة')+fm+(L||none('لا توجد قضايا. أضف أول قضية.'));
 }
 function vP(){
-  const f=show?`<div class="panel"><input id="f1" placeholder="الاسم الكامل"><input id="f2" type="tel" placeholder="رقم الهاتف (مثلاً 0555123456)"><button class="btn" onclick="addP()">حفظ المريض</button></div>`:'';
+  const fm=show?`<div class="panel"><input id="f1" placeholder="الاسم الكامل"><input id="f2" type="tel" placeholder="رقم الهاتف (مثلاً 0555123456)"><button class="btn" onclick="addP()">حفظ</button></div>`:'';
   const L=S.p.map(p=>`<div class="item"><b>${e(p.name)}</b><div class="mut">${e(p.phone)||'بدون رقم'}</div><div class="acts"><button class="btn r" onclick="rm('p','${p.id}')">حذف</button></div></div>`).join('');
-  return add('مريض جديد')+f+(L||none('لا يوجد مرضى. أضف أول مريض.'));
+  return add(T().np)+fm+(L||none('القائمة فارغة. أضف أول اسم.'));
 }
 function vI(){
-  const f=show?(S.p.length?`<div class="panel"><select id="f1">${opts()}</select><input id="f2" type="number" inputmode="numeric" placeholder="المبلغ بالدينار"><button class="btn" onclick="addI()">حفظ الفاتورة</button></div>`:need()):'';
+  const fm=show?(S.p.length?`<div class="panel"><select id="f1">${opts()}</select><input id="f2" type="number" inputmode="numeric" placeholder="المبلغ بالدينار"><button class="btn" onclick="addI()">حفظ</button></div>`:need()):'';
   const L=[...S.i].reverse().map(v=>`<div class="item"><b>${e(find(v.pid).name)}</b><span class="tag ${v.paid?'':'no'}">${v.paid?'مدفوعة':'غير مدفوعة'}</span>
-    <div class="mut">${v.amount.toLocaleString('en')} دج - ${e(v.date)}</div>
+    <div class="mut">${f(v.amount)} - ${e(v.date)}</div>
     <div class="acts"><button class="btn g" onclick="tg('i','${v.id}','paid')">${v.paid?'إلغاء الدفع':'تم الدفع'}</button><button class="btn r" onclick="rm('i','${v.id}')">حذف</button></div></div>`).join('');
-  return add('فاتورة جديدة')+f+(L||none('لا توجد فواتير. أضف أول فاتورة.'));
+  return add(T().ni)+fm+(L||none('لا توجد عناصر. أضف أول واحد.'));
+}
+function vS(){
+  const t=today(),tx=T(),up=S.a.filter(a=>!a.done&&a.date>=t).length,dn=S.a.filter(a=>a.done).length;
+  const pd=S.i.filter(v=>v.paid).reduce((s,v)=>s+v.amount,0),un=S.i.filter(v=>!v.paid).reduce((s,v)=>s+v.amount,0),r=pd+un?Math.round(pd/(pd+un)*100):0;
+  return `<div class="panel"><div class="kv"><span>${tx.p}</span><b>${S.p.length}</b></div><div class="kv"><span>${tx.a} القادمة</span><b>${up}</b></div><div class="kv"><span>${tx.a} المنجزة</span><b>${dn}</b></div><div class="kv"><span>المحصّل</span><b>${f(pd)}</b></div><div class="kv"><span>غير مدفوع</span><b>${f(un)}</b></div><p class="mut">نسبة التحصيل ${r}%</p><div class="bar"><i style="width:${r}%"></i></div></div>
+  <div class="acts"><button class="btn g" onclick="demo()">تحميل بيانات تجريبية</button><button class="btn r" onclick="wipe()">مسح البيانات</button></div>`;
 }
 function render(){
-  const t=today();
+  const t=today(),tx=T();
   $('#n').textContent=S.a.filter(a=>a.date==t&&!a.done).length;
-  $('#d').textContent=S.i.filter(v=>!v.paid).reduce((s,v)=>s+v.amount,0).toLocaleString('en')+' دج';
-  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==tab));
-  $('main').innerHTML=({a:vA,p:vP,i:vI})[tab]();
+  $('#nl').textContent=tx.tl;
+  $('#d').textContent=f(S.i.filter(v=>!v.paid).reduce((s,v)=>s+v.amount,0));
+  document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.m==ST.mode));
+  const ks=ST.mode=='l'?['a','c','p','i','s']:['a','p','i','s'];
+  $('nav').innerHTML=ks.map(k=>`<button class="${k==tab?'on':''}" onclick="go('${k}')">${tx[k]}</button>`).join('');
+  $('main').innerHTML=({a:vA,c:vC,p:vP,i:vI,s:vS})[tab]();
 }
 const go=t=>{tab=t;show=false;render()};
 const done=()=>{show=false;save();render()};
-function addA(){const pid=$('#f1').value;if(!pid)return;S.a.push({id:id(),pid,date:$('#f2').value||today(),time:$('#f3').value||'09:00',note:$('#f4').value.trim()});done()}
-function addP(){const name=$('#f1').value.trim();if(!name)return alert('اكتب اسم المريض');S.p.push({id:id(),name,phone:$('#f2').value.trim()});done()}
+function setM(m){ST.mode=m;S=ST[m];tab='a';show=false;save();render()}
+function addA(){const v=$('#f1').value;if(!v)return;const l=ST.mode=='l',c=l?S.c.find(x=>x.id==v):null;S.a.push({id:id(),pid:l?c.pid:v,date:$('#f2').value||today(),time:$('#f3').value||'09:00',note:(c?c.title+' ':'')+$('#f4').value.trim(),done:false});done()}
+function addC(){const pid=$('#f1').value,title=$('#f2').value.trim();if(!pid||!title)return alert('اكتب عنوان القضية');S.c.push({id:id(),pid,title,court:$('#f3').value.trim()});done()}
+function addP(){const name=$('#f1').value.trim();if(!name)return alert('اكتب الاسم');S.p.push({id:id(),name,phone:$('#f2').value.trim()});done()}
 function addI(){const pid=$('#f1').value,amount=+$('#f2').value;if(!pid||!(amount>0))return alert('اكتب المبلغ');S.i.push({id:id(),pid,amount,paid:false,date:today()});done()}
-function tg(k,i,f){const o=S[k].find(x=>x.id==i);if(o){o[f]=!o[f];save();render()}}
+function tg(k,i,fl){const o=S[k].find(x=>x.id==i);if(o){o[fl]=!o[fl];save();render()}}
 function rm(k,i){if(confirm('هل تريد الحذف؟')){S[k]=S[k].filter(x=>x.id!=i);save();render()}}
+function wipe(){if(confirm('مسح كل بيانات هذا الوضع؟')){S.p=[];S.a=[];S.i=[];S.c=[];save();render()}}
+function demo(){
+  const l=ST.mode=='l';
+  const P=l?['شركة النور للمقاولات','محمد بوزيد','ليلى حمداني','عبد الرحمان سعيدي']:['أمينة بن علي','كريم عمراني','سعاد مرابط','ياسين قاسمي'];
+  S.p=P.map((name,k)=>({id:'p'+k,name,phone:'055500000'+k}));
+  S.c=l?[['نزاع تجاري','محكمة باتنة'],['فسخ عقد إيجار','المحكمة الإدارية'],['قضية عمالية','محكمة بريكة'],['تحصيل ديون','محكمة باتنة']].map((x,k)=>({id:'c'+k,pid:'p'+k,title:x[0],court:x[1]})):[];
+  const N=l?['مرافعة','تحقيق','صلح','النطق بالحكم']:['حشو','تنظيف','استشارة','تقويم'];
+  S.a=N.map((n,k)=>({id:'a'+k,pid:'p'+k,date:dd(k),time:['09:00','10:30','13:00','15:30'][k],note:(l?S.c[k].title+' ':'')+n,done:false}));
+  S.i=[[15000,1],[8000,0],[22000,1],[5000,0]].map((x,k)=>({id:'i'+k,pid:'p'+k,amount:x[0],paid:!!x[1],date:dd(-k)}));
+  tab='a';show=false;save();render();
+}
 render();
 </script>
 </body>
